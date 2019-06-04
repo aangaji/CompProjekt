@@ -1,16 +1,14 @@
 using PyPlot
 pygui(true)
-
-dim = Nx,Ny = 10,10
-
 #################################
-function lattice(latvecs,dim::Tuple{Integer,Integer}) :: Array{typeof(latvecs[1]),2}
+function lattice(latvecs) :: Tuple{Array{Float64,2},Array{Float64,2}}
+    global dim
     g1,g2 = latvecs
-    lat = Array{typeof(g1)}(undef,dim)
+    X,Y = Array{Float64}(undef,dim),Array{Float64}(undef,dim)
     for x=0:dim[1]-1, y=0:dim[2]-1
-            lat[x+1,y+1] = x.*g1.+y.*g2
+            X[x+1,y+1],Y[x+1,y+1] = x.*g1.+y.*g2
     end
-    return lat
+    return X,Y
 end
 ##################################
 ##################################
@@ -43,7 +41,9 @@ end
 ##############################################################
 # single site classical XY-model
 ## idea calculate energy for given nearest neighbours environment (nn::collection of indices) of single site (i::index) on the spin map (ϕ::collection of Float64)
-function Hnn(i::Integer)
+
+## !!! carefull: this doesnt return the total energy by summation since couplings then get counted twice. However it is correct for comparing a change on site i !!!
+function Hnn(i::Integer; ϕi = ϕ[i])
     global dim
     global J
     global h
@@ -51,11 +51,46 @@ function Hnn(i::Integer)
     global nnEnvs #nearest neighbour environment matrix
 
     nns = nnEnvs[i]
-    -J*sum(cos(ϕ[nn]-ϕ[i]) for nn in nns) - h*cos(ϕ[i])
+    -J*sum(cos(ϕ[nn]-ϕi) for nn in nns) - h*cos(ϕi)
 end
 ##############################################################
 
 
+##############################################################
+# Metropolis step
+
+function metropolisStep()
+    global ϕ
+    global β
+    i = rand(1:prod(dim))
+    ϕi = 2*pi*rand()
+    if rand() < min(1,exp(β*(Hnn(i)-Hnn(i,ϕi))))
+        ϕ[i] = ϕi
+    end
+end
+
+metropolisStep(n::Integer) = begin
+    n == 1 ? nothing : metropolisStep(n-1)
+    metropolisStep()
+end
+##############################################################
+
+##############################################################
+function arrowmap()
+    global X
+    global Y
+    global ϕ
+    SpinX,SpinY = cos.(ϕ),sin.(ϕ)
+    fig, ax = plt.subplots()
+    ax.quiver(X, Y, SpinX, SpinY, pivot="mid")
+    scatter(X,Y,s=1.,color="red")
+    PyPlot.show()
+end
+##############################################################
+
+
+
+dim = Nx,Ny = 10,10
 
 J = 1
 h = 0.
@@ -67,10 +102,9 @@ for i in 1:prod(dim)
     nnEnvs[i] = nnEnv(i)
 end
 nnEnvs
-# collect all single site Energies
-H = Array{Float64}(undef,dim)
-for i in 1:prod(dim)
-    H[i] = Hnn(i)
-end
-H
-sum(H)
+
+
+g1,g2 = (1.,0.5),(.5,1.)
+X,Y= lattice((g1,g2))
+
+arrowmap()
