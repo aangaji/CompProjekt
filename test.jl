@@ -101,8 +101,8 @@ function metropolisStep()
     global ϕ
     global β
     i = rand(1:prod(dim))
-    ϕi = 2*pi*rand()
-    if rand() < min(1,exp(β*(Hnn(i)-Hnn(i,ϕi))))
+    ϕi = 2*pi*rand();
+    if rand() < min(1,exp(β*(Hnn(i)-Hnn(i,ϕi=ϕi))))
         ϕ[i] = ϕi
     end
 end
@@ -139,18 +139,26 @@ begin
     PyPlot.show()
 end
 
-function arrowmap()
+function arrowmap(;scale=35., showgrid=true)
+    fig, ax = plt.subplots()
+    arrowmap(ax,scale=scale)
+    title("Magnet")
+    ax
+end
+function arrowmap(ax; scale=35., showgrid=true)
     global X
     global Y
     global ϕ
-    SpinX,SpinY = cos.(ϕ),sin.(ϕ)
-    fig, ax = plt.subplots()
-    ax.quiver(X, Y, SpinX, SpinY, pivot="mid")
-    scatter(X,Y,s=1.,color="red")
+    U,V = ones(Float64,length(X)),ones(Float64,length(X))
+    cla()
+    ax.quiver(X, Y, U, V, pivot="mid", scale=scale, angles = 360.*ϕ/(2*pi))
+    showgrid ? scatter(X,Y,s=1.,color="red") : nothing
     PyPlot.show()
 end
 
-g1,g2 = (1.,0.5),(.5,1.)
+g1,g2 = (1.,0.3),(.3,1.)
 X,Y= lattice((g1,g2))
+
+ax=arrowmap(scale=35.)
 ϕ = 2*pi.*rand(dim)
-arrowmap()
+arrowmap(ax; scale=35.)

@@ -1,6 +1,7 @@
 using PyPlot
 pygui(true)
-#################################
+
+##############################################################
 function lattice(latvecs) :: Tuple{Array{Float64,2},Array{Float64,2}}
     global dim
     g1,g2 = latvecs
@@ -10,8 +11,9 @@ function lattice(latvecs) :: Tuple{Array{Float64,2},Array{Float64,2}}
     end
     return X,Y
 end
-##################################
-##################################
+##############################################################
+
+##############################################################
 function index2Tuple(i::Integer)
     global Ny
     x,y = divrem(i,Ny).+(1,0)
@@ -23,20 +25,21 @@ function tuple2Index(t::Tuple{Integer,Integer})
     y,x = t
     i = (x-1)*Ny+y
 end
-##################################
-##################################
+##############################################################
+
+##############################################################
 # nearest neighbour environment function for square lattice with obc
 function nnEnv(i::Integer)
     global Nx
     global Ny
     nn = Array{Int64}(undef,0)
     if rem(i,Ny) != 0 push!(nn, i+1) end
-    if rem(i,Ny) != 1 push!(nn, i-1) end
+    if rem(i,Ny) != 1 && Ny != 1 push!(nn, i-1) end
     if i > Ny push!(nn, i-Ny) end
     if i <= (Nx-1)*Ny push!(nn, i+Ny) end
     nn
 end
-################################
+##############################################################
 
 ##############################################################
 # single site classical XY-model
@@ -63,8 +66,8 @@ function metropolisStep()
     global ϕ
     global β
     i = rand(1:prod(dim))
-    ϕi = 2*pi*rand()
-    if rand() < min(1,exp(β*(Hnn(i)-Hnn(i,ϕi))))
+    ϕi = 2*pi*rand();
+    if rand() < min(1,exp(β*(Hnn(i)-Hnn(i,ϕi=ϕi))))
         ϕ[i] = ϕi
     end
 end
@@ -76,25 +79,31 @@ end
 ##############################################################
 
 ##############################################################
-function arrowmap()
+function arrowmap(;scale=35., showgrid=true)
+    fig, ax = plt.subplots()
+    arrowmap(ax,scale=scale)
+    ax
+end
+function arrowmap(ax; scale=35., showgrid=true)
     global X
     global Y
     global ϕ
-    SpinX,SpinY = cos.(ϕ),sin.(ϕ)
-    fig, ax = plt.subplots()
-    ax.quiver(X, Y, SpinX, SpinY, pivot="mid")
-    scatter(X,Y,s=1.,color="red")
+    U,V = ones(Float64,length(X)),ones(Float64,length(X))
+    cla()
+    ax.quiver(X, Y, U, V, pivot="mid", scale=scale, angles = 360.*ϕ/(2*pi))
+    showgrid ? scatter(X,Y,s=1.5,color="red") : nothing
+    title("Magnet")
     PyPlot.show()
 end
 ##############################################################
 
+# reducing to 1D case by setting Ny=1 for high Nx shows the existence of continuous domain walls
 
-
-dim = Nx,Ny = 10,10
+dim = Nx,Ny = 30,30
 
 J = 1
 h = 0.
-ϕ = 2*pi.*rand(dim)
+β = .001
 
 # collect nearest neighbour environments such that nnEnvs[i] is nnEnv @ site i
 nnEnvs = Array{Array{Int64,1}}(undef,dim)
@@ -104,7 +113,34 @@ end
 nnEnvs
 
 
-g1,g2 = (1.,0.5),(.5,1.)
+g1,g2 = (1.,0.),(0.,1.)
 X,Y= lattice((g1,g2))
 
-arrowmap()
+
+##############################################################
+ϕ = 2*pi.*rand(dim)
+ax=arrowmap(scale=80.)
+
+β = 10.
+metropolisStep()
+arrowmap(ax; scale=80.)
+
+metropolisStep(1000)
+for βp in β:0.5:100.
+    global β = βp
+    metropolisStep(1000)
+    arrowmap(ax; scale=80.)
+    sleep(.05)
+end
+
+for n in 1:1000
+    metropolisStep()
+    arrowmap(ax; scale=50.)
+    sleep(.05)
+end
+
+
+# check
+## ax overwritten? #yes
+## imshow(H) with heatmap?
+## cmap(H,heatmap) for arrows?
