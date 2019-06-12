@@ -1,21 +1,20 @@
 function HnnISING(i::Integer; ϕi = ϕ[i])
-    global dim
+    global Sys
     global J
     global h
-    global ϕ
-    global nnEnvs #nearest neighbour environment matrix
+    ϕ,nnEnvs = Sys.ϕ,Sys.nnEnvs
 
     nns = nnEnvs[i]
     -J/4*sum(sign(ϕ[nn])*sign(ϕi) for nn in nns) - h/2*sign(ϕi)
 end
 
 function metropolisStepISING()
-    global ϕ
+    global Sys
     global β
     i = rand(1:prod(dim))
     ϕi = -ϕ[i]
     if rand() < exp(β*(HnnISING(i)-HnnISING(i,ϕi=ϕi)))
-        ϕ[i] = ϕi
+        Sys.ϕ[i] = ϕi
     end
 end
 

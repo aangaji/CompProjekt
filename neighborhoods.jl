@@ -1,7 +1,6 @@
 ##############################################################
-function nnEnv(conditions,i::Integer)
-    global Nx
-    global Ny
+function nnEnv(dim,conditions,i::Integer)
+    Ny,Nx = dim
     nn = Array{Int64}(undef,0)
     notBottom :: Bool = (rem(i,Ny) != 0 && Ny != 1)
     notTop:: Bool = (rem(i,Ny) != 1 && Ny != 1)

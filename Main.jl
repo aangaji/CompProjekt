@@ -1,41 +1,28 @@
-using PyPlot
-pygui(true)
 include("neighborhoods.jl")
 include("usefullfunctions.jl")
 include("model.jl")
 include("ising.jl")
 
-# reducing to 1D case by setting Ny=1 for high Nx shows the existence of continuous domain walls
-# very small systems show ordered phase due to low entropy
 
-dim = Ny,Nx = 20,40
-
-J = 1
+###########################################################################
+J = 1.
 h = 0.
 β = .001
 
-# collect nearest neighbour environments such that nnEnvs[i] is nnEnv @ site i
-## choose from cubicObc,cubicPbc,triangObc,triangPbc
-conditions = cubicObc
-nnEnvs = Array{Array{Int64,1}}(undef,dim)
-for i in 1:prod(dim)
-    nnEnvs[i] = nnEnv(conditions,i)
-end
-nnEnvs
-
-
-g1,g2 = (1.,0.),(0.,1.)
-X,Y= lattice((g1,g2))
-
-Hi = similar(X)
+# reducing to 1D case by setting Ny=1 for high Nx shows the existence of continuous domain walls
+# very small systems show ordered phase due to low entropy
+cubicSys = System((20,40),cubicObc,((1.,0.),(0.,1.)))
+triangSys = System((30,30),triangPbc,((1.,0.),(0.5,-1.)))
+# Sys = cubicSys # All functions see mutable global var Sys
 ##############################################################
 
-mz() = begin global ϕ; cos.(ϕ) end
+
+mz() = begin global Sys; cos.(Sys.ϕ) end
+Hi = similar(Sys.ϕ)
 hlocal() = begin global Hi; Hmatrix(Hi); return Hi end
 
 scale = nothing
-ϕ = 2*pi.*rand(dim)
-color = hlocal
+color = mz
 fig,ax=arrowmap(scale=scale,C=color())
 arrowmap((fig,ax); scale=scale,C=color())
 
@@ -70,7 +57,7 @@ end
 ##############################################################
 # ISING
 scale = nothing
-ϕ = pi/2.*rand([1,-1],dim)
+Sys.ϕ = pi/2.*rand([1,-1],dim)
 fig,ax=arrowmap(scale=scale)
 
 metropolisStepISING(1000)
