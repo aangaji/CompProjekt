@@ -41,16 +41,31 @@ function Hnn(i::Integer; ϕi = Sys.ϕ[i])
     -J*sum(cos(ϕ[nn]-ϕi) for nn in nns) - h*cos(ϕi)
 end
 ##############################################################
-function Hmatrix(H)
+function Hmatrix()
     global Sys
     global J
     global h
     dim,ϕ,nnEnvs = Sys.dim,Sys.ϕ,Sys.nnEnvs
 
+    global Hi = similar(ϕ)
     for i in 1:prod(dim)
-        H[i] = -J/2*sum(cos(ϕ[nn]-ϕ[i]) for nn in nnEnvs[i]) - h*cos(ϕ[i])
+        Hi[i] = -J/2*sum(cos(ϕ[nn]-ϕ[i]) for nn in nnEnvs[i]) - h*cos(ϕ[i])
     end
 end
+
+##############################################################
+# Measurements
+energy() = begin Hmatrix(); global Hi; return mean(Hi) end
+
+function magnetization()
+    global Sys
+    dim,ϕ = Sys.dim,Sys.ϕ
+    sqrt(sum(cos.(ϕ))^2+sum(sin.(ϕ))^2)/prod(dim)
+end
+
+Cv(E) = begin global β; β^2*var(E) end
+
+χ(M) = begin global β; β*var(M) end
 
 ##############################################################
 # Metropolis step
