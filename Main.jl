@@ -14,7 +14,7 @@ h = 0.
 # very small systems show ordered phase due to low entropy
 cubicSys = System((8,8),cubicObc,((1.,0.),(0.,1.)))
 triangSys = System((30,30),triangPbc,((1.,0.),(0.5,-1.)))
-# Sys = triangSys # All functions see mutable global var Sys
+Sys = triangSys # All functions see mutable global var Sys
 ##############################################################
 
 
@@ -22,7 +22,7 @@ mz() = begin global Sys; cos.(Sys.ϕ) end
 hlocal() = begin Hmatrix(); return Hi end
 
 scale = nothing
-color = mz
+color = hlocal
 fig,ax=arrowmap(scale=scale,C=color())
 arrowmap((fig,ax); scale=scale,C=color())
 
@@ -47,17 +47,19 @@ end
 
 ################################################
 #Measurements
-color = hlocal
-Ts = linspace(.001,10.,200)
-Es,dEs = similar(Ts),similar(Ts)
-Cvs,χs = similar(Ts),similar(Ts)
-Ms,dMs = similar(Ts),similar(Ts)
-βs = 1./Ts
-temper(βs[1])
-arrowmap((fig,ax); scale=scale,C=color())
-It = 80
-Et = Array{Float64}(It)
-Mt = Array{Float64}(It)
+begin
+    color = hlocal
+    Ts = linspace(.001,10.,200)
+    Es,dEs = similar(Ts),similar(Ts)
+    Cvs,χs = similar(Ts),similar(Ts)
+    Ms,dMs = similar(Ts),similar(Ts)
+    βs = 1./Ts
+    temper(βs[1])
+    arrowmap((fig,ax); scale=scale,C=color())
+    It = 80
+    Et = Array{Float64}(It)
+    Mt = Array{Float64}(It)
+end
 @time for t=1:length(βs)
     global β = βs[t]
     metropolisStep(1000)
@@ -72,21 +74,19 @@ Mt = Array{Float64}(It)
     χs[t] = χ(Mt)
 end
 arrowmap((fig,ax); scale=scale,C=color())
+
 begin
-    figure("Energy")
-    errorbar(log.(Ts*βcrit),Es, yerr=sqrt.(dEs))
-end
-begin
-    figure("Magnetization")
-    errorbar(log.(Ts*βcrit),Ms, yerr=sqrt.(dMs))
-end
-begin
-    figure("C_v")
-    plot(log.(Ts*βcrit),Cvs)
-end
-begin
-    figure("χ")
-    plot(log.(Ts*βcrit),χs)
+    measfig,axs = plt.subplots(2, 2)
+    axs[1,1].errorbar(Ts*βcrit,Es, yerr=sqrt.(dEs)); axs[1,1].set_title("Energy")
+    axs[1,2].errorbar(Ts*βcrit,Ms, yerr=sqrt.(dMs)); axs[1,2].set_title("Magnetization")
+    axs[2,1].plot(Ts*βcrit,Cvs); axs[2,1].set_title("C_v")
+    axs[2,2].plot(Ts*βcrit,χs); axs[2,2].set_title("χ")
+    for axi in axs
+        axi.set_xscale("log")
+        axi.set_xticks([.001,.01,.1,1,10])
+        axi.set_xticklabels([.001,.01,.1,1,10])
+    end
+    measfig.tight_layout()
 end
 
 

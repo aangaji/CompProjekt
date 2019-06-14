@@ -10,7 +10,8 @@ end
 
 function arrowmap(;scale= nothing, showgrid=true, C = zeros(Float64,Sys.dim))
     global update_figure = true
-    fig, ax = plt.subplots()
+    fig = figure("System")
+    ax = plt.subplot()
     arrowmap((fig,ax),scale=scale, C=C)
     fig,ax
 end
@@ -21,10 +22,10 @@ function arrowmap((fig,ax); scale= nothing, showgrid=true, C = zeros(Float64,Sys
         X,Y = Sys.latpoints
         ϕ = Sys.ϕ
         U,V = ones(Float64,length(X)),ones(Float64,length(X))
-        cla()
+        ax.cla()
         ax.quiver(X, Y, U, V, C, cmap = "brg", pivot="mid", scale=scale, angles = 360.*ϕ/(2*pi))
-        showgrid ? scatter(X,Y,s=1.5,color="red") : nothing
-        title("Magnet")
+        showgrid ? ax.scatter(X,Y,s=1.5,color="red") : nothing
+        ax.set_title("System")
         PyPlot.show()
     end
 end
