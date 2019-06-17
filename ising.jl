@@ -1,4 +1,4 @@
-function HnnISING(i::Integer; ϕi = ϕ[i])
+function HnnISING(i::Integer; ϕi = Sys.ϕ[i])
     global Sys
     global J
     global h
@@ -11,10 +11,11 @@ end
 function metropolisStepISING()
     global Sys
     global β
+    ϕ,dim = Sys.ϕ,Sys.dim
     i = rand(1:prod(dim))
     ϕi = -ϕ[i]
     if rand() < exp(β*(HnnISING(i)-HnnISING(i,ϕi=ϕi)))
-        Sys.ϕ[i] = ϕi
+        ϕ[i] = ϕi
     end
 end
 

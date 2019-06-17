@@ -65,7 +65,7 @@ end
 
 Cv(E) = begin global β; β^2*var(E) end
 
-χ(M) = begin global β; β*var(M) end
+χ(M) = begin global β; global Sys; β*var(M)/prod(Sys.dim) end
 
 ##############################################################
 # Metropolis step

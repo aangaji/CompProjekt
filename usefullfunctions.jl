@@ -19,13 +19,14 @@ function arrowmap((fig,ax); scale= nothing, showgrid=true, C = zeros(Float64,Sys
     fig[:canvas][:mpl_connect]("close_event", handle_close)
     if update_figure
         global Sys
+        global β
         X,Y = Sys.latpoints
         ϕ = Sys.ϕ
         U,V = ones(Float64,length(X)),ones(Float64,length(X))
         ax.cla()
         ax.quiver(X, Y, U, V, C, cmap = "brg", pivot="mid", scale=scale, angles = 360.*ϕ/(2*pi))
         showgrid ? ax.scatter(X,Y,s=1.5,color="red") : nothing
-        ax.set_title("System")
+        ax.set_title("System T=$(round(1/β,digits=3))")
         PyPlot.show()
     end
 end
