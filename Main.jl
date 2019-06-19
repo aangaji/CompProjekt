@@ -1,3 +1,6 @@
+using PyPlot
+pygui(true)
+
 include("neighborhoods.jl")
 include("usefullfunctions.jl")
 include("model.jl")
@@ -12,7 +15,7 @@ h = 0.
 # reducing to 1D case by setting Ny=1 for high Nx shows the existence of continuous domain walls
 # very small systems show ordered phase due to low entropy
 linearSys = System((1,20),cubicPbc,((1.,0.),(0.,1.)))
-cubicSys = System((50,50),cubicObc,((1.,0.),(0.,1.)))
+cubicSys = System((8,8),cubicObc,((1.,0.),(0.,1.)))
 triangSys = System((30,30),triangPbc,((1.,0.),(0.5,-1.)))
 Sys = cubicSys # All functions see mutable global var Sys
 ##############################################################
@@ -21,7 +24,7 @@ Sys = cubicSys # All functions see mutable global var Sys
 mz() = begin global Sys; sin.(Sys.ϕ) end
 hlocal() = begin Hmatrix(); return Hi end
 
-scale = 50
+scale = nothing
 color = mz
 fig,ax=arrowmap(scale=scale,C=color())
 arrowmap((fig,ax); scale=scale,C=color())
