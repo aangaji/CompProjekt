@@ -7,7 +7,7 @@ include("model.jl")
 
 
 ###########################################################################
-J = -1.
+J = 1.
 h = 0.
 βcrit = π*J/2
 β = .001
@@ -15,8 +15,8 @@ h = 0.
 # reducing to 1D case by setting Ny=1 for high Nx shows the existence of continuous domain walls
 # very small systems show ordered phase due to low entropy
 linearSys = System((1,20),cubicPbc,((1.,0.),(0.,1.)))
-cubicSys = System((8,8),cubicObc,((1.,0.),(0.,1.)))
-triangSys = System((30,30),triangPbc,((1.,0.),(0.5,-1.)))
+cubicSys = System((150,150),cubicObc,((1.,0.),(0.,1.)))
+triangSys = System((150,150),triangPbc,((1.,0.),(0.5,-1.)))
 Sys = cubicSys # All functions see mutable global var Sys
 ##############################################################
 
@@ -31,20 +31,20 @@ arrowmap((fig,ax); scale=scale,C=color())
 
 #temper
 function temper(βend)
-    for βp in linspace(.001,βend,200)
+    for βp in linspace(.01,βend,300)
         global β = βp
-        metropolisStep(1000)
+        metropolisStep(2000)
     end
 end
 
 temper(50.)
-arrowmap((fig,ax); scale=scale,C=color())
+arrowmap((fig,ax); scale=scale,C=color(),showgrid=false)
 #visualize
-for βp in β:-0.1:.1
+for Tp in 1/β:0.01:10.
     if !update_figure break end
-    global β = βp
+    global β = 1/Tp
     metropolisStep(2000)
-    arrowmap((fig,ax); scale=scale,C=color())
+    arrowmap((fig,ax); scale=scale,C=color(),showgrid=false)
     sleep(.02)
 end
 
@@ -65,7 +65,7 @@ begin
 end
 @time for t=1:length(βs)
     global β = βs[t]
-    print(round(β,digits=2)," ")
+    print(round(1/β,digits=2)," ")
     metropolisStep(1000)
     for i=1:It
         metropolisStep(1500)
@@ -97,7 +97,7 @@ for axi in axs
     axi.set_xticklabels([.1,1,10])
 end
 
-for t=1:length(βs)-6
+for t=1:length(βs)-10
     Cvs[t] = mean(Cvs[t:t+5])
     χs[t] = mean(χs[t:t+5])
 end
