@@ -15,8 +15,8 @@ h = 0.
 # reducing to 1D case by setting Ny=1 for high Nx shows the existence of continuous domain walls
 # very small systems show ordered phase due to low entropy
 linearSys = System((1,20),cubicPbc,((1.,0.),(0.,1.)))
-cubicSys = System((150,150),cubicObc,((1.,0.),(0.,1.)))
-triangSys = System((150,150),triangPbc,((1.,0.),(0.5,-1.)))
+cubicSys = System((20,20),cubicObc,((1.,0.),(0.,1.)))
+triangSys = System((60,60),triangPbc,((1.,0.),(0.5,-1.)))
 Sys = cubicSys # All functions see mutable global var Sys
 ##############################################################
 
@@ -31,7 +31,7 @@ arrowmap((fig,ax); scale=scale,C=color())
 
 #temper
 function temper(βend)
-    for βp in linspace(.01,βend,300)
+    for βp in linspace(.01,βend,200)
         global β = βp
         metropolisStep(2000)
     end
@@ -47,6 +47,13 @@ for Tp in 1/β:0.01:10.
     arrowmap((fig,ax); scale=scale,C=color(),showgrid=false)
     sleep(.02)
 end
+temper(2.)
+while true
+    if !update_figure break end
+    metropolisStep(1000)
+    arrowmap((fig,ax); scale=scale,C=color(),showgrid=false)
+    sleep(.02)
+end
 
 ################################################
 #Measurements
@@ -56,26 +63,30 @@ begin
     Es,dEs = similar(Ts),similar(Ts)
     Cvs,χs = similar(Ts),similar(Ts)
     Ms,dMs = similar(Ts),similar(Ts)
+    Υs,dΥs = similar(Ts),similar(Ts)
     βs = 1./Ts
     temper(βs[1])
     arrowmap((fig,ax); scale=scale,C=color())
-    It = 150
+    It = 100
     Et = Array{Float64}(It)
     Mt = Array{Float64}(It)
+    Υt = Array{Float64}(It)
 end
 @time for t=1:length(βs)
     global β = βs[t]
     print(round(1/β,digits=2)," ")
-    metropolisStep(1000)
+    metropolisStep(4000)
     for i=1:It
         metropolisStep(1500)
         Et[i] = energy()
         Mt[i] = magnetization()
+        #Υt[i] = Υ(Et[i])
     end
     Es[t],dEs[t] = mean(Et),std(Et)/It
     Cvs[t] = Cv(Et)
     Ms[t],dMs[t] = mean(Mt),std(Mt)/It
     χs[t] = χ(Mt)
+    #Υs[t],dΥs[t] = mean(Υt),std(Υt)/It
 end
 
 arrowmap((fig,ax); scale=scale,C=color())
@@ -83,12 +94,18 @@ arrowmap((fig,ax); scale=scale,C=color())
 measfig,axs = plt.subplots(2, 2)
 
 begin
-    axs[1,1].errorbar(Ts*βcrit,Es, yerr=sqrt.(dEs)); axs[1,1].set_title("Energy")
-    axs[1,2].errorbar(Ts*βcrit,Ms, yerr=sqrt.(dMs)); axs[1,2].set_title("Magnetization")
+    axs[1,1].errorbar(Ts*βcrit,Es, yerr=dEs); axs[1,1].set_title("Energy")
+    axs[1,2].errorbar(Ts*βcrit,Ms, yerr=dMs); axs[1,2].set_title("Magnetization")
     axs[2,1].plot(Ts*βcrit,Cvs); axs[2,1].set_title("C_v")
     axs[2,2].plot(Ts*βcrit,χs, label="L=$(prod(Sys.dim))"); axs[2,2].set_title("χ")
     legend()
     measfig.tight_layout()
+end
+
+begin
+    figure("helicity")
+    errorbar(Ts*βcrit,Υs, yerr=sqrt.(dΥs),label="L=$(prod(Sys.dim))")
+    legend()
 end
 
 for axi in axs

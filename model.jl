@@ -67,6 +67,20 @@ Cv(E) = begin global β; β^2*var(E) end
 
 χ(M) = begin global β; global Sys; β*var(M)/prod(Sys.dim) end
 
+Υ(E) = begin
+    global β
+    global Sys
+    dim,ϕ,nnEnvs = Sys.dim,Sys.ϕ,Sys.nnEnvs
+    X,Y = Sys.latpoints
+    y = 0.
+    for i in 1:prod(dim)
+        for j in i+1:prod(dim)
+            y = sin(ϕ[i]-ϕ[j])*(X[i]-X[j])
+        end
+    end
+    return -1/2*E-β*(y)^2
+end
+
 ##############################################################
 # Metropolis step
 
